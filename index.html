@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análisis Interactivo de Crímenes Sectarios</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Scholarly Neutrals -->
+    <!-- Application Structure Plan: Se ha diseñado una aplicación de una sola página con navegación por pestañas temáticas (Inicio, Definiciones, Mecanismos, Crímenes, Casos, Marco Legal). Esta estructura transforma el plan de investigación lineal del usuario en una experiencia de exploración no lineal y más intuitiva. Permite al usuario profundizar en áreas específicas de interés (como los mecanismos de control o los tipos de crímenes) sin tener que seguir un orden estricto. La interacción se centra en hacer clic en elementos para revelar información, comparar datos visualmente y explorar casos de estudio, lo que facilita una comprensión más profunda y personal del complejo tema. Se eligió este enfoque de "dashboard" temático porque organiza la información de manera lógica y digerible, mejorando la usabilidad y el compromiso del usuario con el contenido. -->
+    <!-- Visualization & Content Choices: 
+    - Info: Concepto de "secta". Goal: Definir. Viz: Tarjetas de texto interactivas. Interaction: Clic para expandir y ver detalles. Justification: Aclara terminología fundamental desde el inicio. Method: HTML/CSS/JS.
+    - Info: Mecanismos de control psicológico. Goal: Organizar y Explicar. Viz: Diagrama de flujo interactivo. Interaction: Hover o clic en cada nodo (Aislamiento, Control Doctrinal) para mostrar una descripción detallada. Justification: Visualiza relaciones complejas de una manera mucho más clara que un texto largo. Method: HTML/Tailwind/JS.
+    - Info: Tipos de crímenes asociados. Goal: Comparar. Viz: Gráfico de barras horizontales. Interaction: Tooltips de Chart.js al pasar el ratón para ver detalles. Justification: Ofrece una comparación visual e inmediata de la prevalencia de diferentes tipos de delitos. Library: Chart.js (Canvas).
+    - Info: Casos históricos y contemporáneos. Goal: Organizar y Detallar. Viz: Galería de tarjetas modales. Interaction: Clic en una tarjeta de caso para abrir una ventana modal con información completa (líder, crímenes, doctrina). Justification: Permite al usuario explorar múltiples casos de manera concisa y acceder a los detalles bajo demanda sin saturar la pantalla principal. Method: HTML/Tailwind/JS.
+    - Info: Respuesta legal y dificultades. Goal: Informar. Viz: Columnas de texto estructurado. Interaction: Mínima, enfocada en la legibilidad. Justification: Presenta información densa y textual de forma clara y segmentada. Method: HTML/Tailwind.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8f7f4; color: #1a1a1a; }
+        .nav-item { cursor: pointer; padding: 0.75rem 1rem; border-radius: 0.375rem; transition: background-color 0.3s, color 0.3s; font-weight: 500; }
+        .nav-item.active { background-color: #8c7a6b; color: #ffffff; }
+        .nav-item:not(.active):hover { background-color: #e5e0da; }
+        .content-section { display: none; }
+        .content-section.active { display: block; }
+        .card { background-color: #ffffff; border: 1px solid #e5e0da; border-radius: 0.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); transition: transform 0.3s, box-shadow 0.3s; }
+        .card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.07); }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 50; opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s; }
+        .modal.visible { opacity: 1; visibility: visible; }
+        .modal-content { background-color: #fff; padding: 2rem; border-radius: 0.5rem; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
+        .chart-container { position: relative; width: 100%; max-width: 700px; margin: auto; height: 350px; max-height: 400px; }
+        @media (min-width: 768px) { .chart-container { height: 400px; } }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="container mx-auto px-4 py-8">
+        
+        <header class="text-center mb-10">
+            <h1 class="text-4xl md:text-5xl font-bold text-[#3d342e] mb-2">Análisis de la Criminalidad en Grupos Sectarios</h1>
+            <p class="text-lg text-gray-600 max-w-3xl mx-auto">Una herramienta interactiva para explorar la instrumentalización de la fe y los mecanismos de control que conducen a la actividad delictiva.</p>
+        </header>
+
+        <nav class="flex flex-wrap justify-center gap-2 md:gap-4 mb-10 pb-4 border-b border-gray-300">
+            <a id="nav-inicio" class="nav-item active">Inicio</a>
+            <a id="nav-definiciones" class="nav-item">Definiciones Clave</a>
+            <a id="nav-mecanismos" class="nav-item">Mecanismos de Control</a>
+            <a id="nav-crimenes" class="nav-item">Tipología del Crimen</a>
+            <a id="nav-casos" class="nav-item">Casos de Estudio</a>
+            <a id="nav-legal" class="nav-item">Marco Legal</a>
+        </nav>
+
+        <main>
+            <section id="section-inicio" class="content-section active">
+                <div class="bg-white p-8 rounded-lg shadow-sm border border-gray-200">
+                    <h2 class="text-2xl font-bold text-[#8c7a6b] mb-4">Bienvenido a la Plataforma de Investigación</h2>
+                    <p class="text-gray-700 mb-4">Esta aplicación está diseñada para guiar tu investigación sobre la compleja intersección entre grupos de alto control (comúnmente llamados "sectas") y la comisión de crímenes. El objetivo no es generalizar sobre la fe, sino analizar específicamente cómo ciertas estructuras y doctrinas pueden ser manipuladas para justificar o cometer actos ilegales.</p>
+                    <p class="text-gray-700 mb-6">Utiliza las pestañas de navegación para explorar los diferentes aspectos de este fenómeno. Desde las definiciones fundamentales hasta el análisis de casos concretos y la respuesta de los sistemas judiciales, cada sección te proporcionará información estructurada para responder a las preguntas clave de tu investigación:</p>
+                    <ul class="list-disc list-inside space-y-2 text-gray-700">
+                        <li>¿Cómo se define una "secta" en un contexto criminológico?</li>
+                        <li>¿Qué mecanismos psicológicos permiten la instrumentalización de los miembros?</li>
+                        <li>¿Qué tipos de crímenes son más comunes y por qué?</li>
+                        <li>¿Existen paralelismos entre prácticas de sectas y las de algunas religiones modernas?</li>
+                        <li>¿Qué desafíos legales existen para procesar estos crímenes?</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section id="section-definiciones" class="content-section">
+                <div class="text-center mb-8">
+                     <h2 class="text-3xl font-bold text-[#8c7a6b] mb-2">Definiendo el Fenómeno</h2>
+                     <p class="text-gray-600 max-w-2xl mx-auto">Para analizar el problema, es crucial entender la terminología. Aquí exploramos los conceptos de "secta" o "culto" y cómo ciertas creencias pueden actuar como catalizadores de la violencia.</p>
+                </div>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="card p-6">
+                        <h3 class="text-xl font-semibold mb-3 text-[#3d342e]">¿Qué es una "Secta" o "Culto"?</h3>
+                        <p class="text-gray-600 mb-4">En sociología y criminología, el término no se enfoca en la teología, sino en el <strong class="font-semibold">comportamiento y la estructura del grupo</strong>. Las características clave incluyen:</p>
+                        <ul class="list-disc list-inside space-y-2 text-sm text-gray-700">
+                            <li><strong>Liderazgo carismático y autoritario:</strong> El líder exige lealtad y obediencia incuestionable.</li>
+                            <li><strong>Alto nivel de control:</strong> Regulación de la vida diaria de los miembros (relaciones, finanzas, información).</li>
+                            <li><strong>Aislamiento:</strong> Se fomenta la ruptura de lazos con el exterior (familia, amigos).</li>
+                            <li><strong>Pensamiento de "nosotros contra ellos":</strong> El grupo se ve a sí mismo como especial o perseguido por el mundo exterior.</li>
+                        </ul>
+                    </div>
+                    <div class="card p-6">
+                        <h3 class="text-xl font-semibold mb-3 text-[#3d342e]">Creencias como Catalizadores</h3>
+                        <p class="text-gray-600 mb-4">Ciertas doctrinas pueden ser utilizadas para justificar actos que normalmente serían inaceptables. Haz clic para ver ejemplos:</p>
+                        <div id="creencias-container" class="space-y-2">
+                             <button data-text="Creencia en que el fin del mundo es inminente. Esto puede justificar actos extremos (suicidio masivo, ataques preventivos) para 'salvarse' o 'acelerar' el fin." class="w-full text-left p-2 bg-gray-100 hover:bg-gray-200 rounded">Creencias Apocalípticas</button>
+                             <button data-text="La creencia de que el líder o el grupo tiene una misión divina especial. Esto puede llevar a la idea de que están 'por encima de la ley' humana y que sus actos están justificados por un poder superior." class="w-full text-left p-2 bg-gray-100 hover:bg-gray-200 rounded">Misión Divina o Exclusividad</button>
+                             <button data-text="Doctrinas que demonizan al mundo exterior o a ex-miembros. Esto puede justificar actos de violencia o acoso contra los 'enemigos' del grupo, vistos como una amenaza existencial." class="w-full text-left p-2 bg-gray-100 hover:bg-gray-200 rounded">Demonización del Exterior</button>
+                        </div>
+                        <div id="creencia-info" class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded text-blue-800 text-sm" style="display: none;"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="section-mecanismos" class="content-section">
+                 <div class="text-center mb-8">
+                     <h2 class="text-3xl font-bold text-[#8c7a6b] mb-2">Mecanismos de Control Psicológico</h2>
+                     <p class="text-gray-600 max-w-3xl mx-auto">Los crímenes en estos grupos no surgen de la nada. Son el resultado de un proceso sistemático de control y coerción. Interactúa con el siguiente diagrama para entender cómo se manipula a los individuos y se neutraliza su pensamiento crítico.</p>
+                </div>
+                <div class="flex flex-col md:flex-row gap-8 items-start">
+                    <div class="w-full md:w-1/2 grid grid-cols-2 gap-4">
+                        <div id="control-item-1" class="mecanismo-item p-4 text-center border-2 border-transparent rounded-lg cursor-pointer bg-white shadow-sm hover:border-[#8c7a6b]">
+                            <h4 class="font-semibold">Aislamiento Social</h4>
+                            <p class="text-xs text-gray-500">Separar del mundo exterior</p>
+                        </div>
+                        <div id="control-item-2" class="mecanismo-item p-4 text-center border-2 border-transparent rounded-lg cursor-pointer bg-white shadow-sm hover:border-[#8c7a6b]">
+                            <h4 class="font-semibold">Control de Información</h4>
+                             <p class="text-xs text-gray-500">Filtrar la realidad</p>
+                        </div>
+                        <div id="control-item-3" class="mecanismo-item p-4 text-center border-2 border-transparent rounded-lg cursor-pointer bg-white shadow-sm hover:border-[#8c7a6b]">
+                            <h4 class="font-semibold">Coerción Financiera</h4>
+                            <p class="text-xs text-gray-500">Crear dependencia económica</p>
+                        </div>
+                        <div id="control-item-4" class="mecanismo-item p-4 text-center border-2 border-transparent rounded-lg cursor-pointer bg-white shadow-sm hover:border-[#8c7a6b]">
+                            <h4 class="font-semibold">Manipulación Emocional</h4>
+                             <p class="text-xs text-gray-500">Usar culpa, miedo y amor</p>
+                        </div>
+                    </div>
+                    <div id="mecanismo-detalle" class="w-full md:w-1/2 card p-6">
+                        <h3 id="mecanismo-titulo" class="text-xl font-bold text-[#8c7a6b] mb-3">Selecciona un mecanismo</h3>
+                        <p id="mecanismo-texto" class="text-gray-700">Pasa el ratón o haz clic en un elemento del diagrama para ver su descripción detallada, cómo se implementa y su comparación con prácticas controvertidas en religiones establecidas.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="section-crimenes" class="content-section">
+                <div class="text-center mb-8">
+                     <h2 class="text-3xl font-bold text-[#8c7a6b] mb-2">Tipología de Crímenes Frecuentes</h2>
+                     <p class="text-gray-600 max-w-3xl mx-auto">Aunque los crímenes pueden variar, ciertos patrones emergen de forma consistente en los casos estudiados. El siguiente gráfico muestra una distribución de los tipos de delitos más comunes asociados a grupos sectarios, basados en análisis de casos documentados.</p>
+                </div>
+                <div class="card p-4 md:p-6">
+                    <div class="chart-container">
+                        <canvas id="crimenesChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <section id="section-casos" class="content-section">
+                 <div class="text-center mb-8">
+                     <h2 class="text-3xl font-bold text-[#8c7a6b] mb-2">Casos de Estudio Notables</h2>
+                     <p class="text-gray-600 max-w-3xl mx-auto">La teoría cobra vida al examinar casos reales. Explora estos ejemplos históricos y contemporáneos para ver cómo los mecanismos de control y las doctrinas extremas se tradujeron en crímenes devastadores. Haz clic en cada caso para más detalles.</p>
+                </div>
+                <div id="casos-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                </div>
+            </section>
+            
+            <section id="section-legal" class="content-section">
+                 <div class="text-center mb-8">
+                     <h2 class="text-3xl font-bold text-[#8c7a6b] mb-2">Respuesta y Desafíos del Marco Legal</h2>
+                     <p class="text-gray-600 max-w-3xl mx-auto">Procesar crímenes cometidos en un contexto religioso presenta desafíos únicos para la justicia. Esta sección aborda las dificultades legales, la existencia de leyes específicas y la variabilidad de la definición de "crimen" a nivel internacional.</p>
+                </div>
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="card p-6">
+                        <h3 class="text-xl font-semibold mb-3 text-[#3d342e]">Dificultades Judiciales</h3>
+                         <ul class="list-disc list-inside space-y-2 text-gray-700">
+                            <li><strong>Libertad de Culto:</strong> La defensa suele argumentar que sus prácticas están protegidas por la libertad religiosa, complicando la intervención estatal.</li>
+                            <li><strong>Consentimiento Coercitivo:</strong> Es difícil probar que el "consentimiento" de las víctimas (p. ej., en abuso sexual o donaciones financieras) no fue genuino, sino producto de manipulación psicológica.</li>
+                            <li><strong>Testimonios de ex-miembros:</strong> A menudo son desacreditados por la defensa como testimonios de "apóstatas" resentidos.</li>
+                        </ul>
+                    </div>
+                    <div class="card p-6">
+                        <h3 class="text-xl font-semibold mb-3 text-[#3d342e]">Leyes "Anti-Sectas"</h3>
+                        <p class="text-gray-600 mb-4">Algunos países, como Francia, han implementado leyes específicas para monitorear y actuar contra "desviaciones sectarias" que amenazan el orden público o los derechos humanos. Estas leyes se centran en el <strong class="font-semibold">comportamiento manipulador y el abuso</strong>, no en la creencia.</p>
+                        <p class="text-gray-600">Sin embargo, son controvertidas. Críticos argumentan que pueden estigmatizar a nuevos movimientos religiosos y ser usadas para limitar la libertad de creencia.</p>
+                    </div>
+                     <div class="card p-6">
+                        <h3 class="text-xl font-semibold mb-3 text-[#3d342e]">Variación Internacional</h3>
+                        <p class="text-gray-600 mb-4">Lo que se considera un crimen en un país puede no serlo, o tener un umbral legal diferente, en otro.</p>
+                        <ul class="list-disc list-inside space-y-2 text-gray-700">
+                            <li><strong>Negligencia Médica:</strong> Grupos que rechazan la medicina moderna pueden enfrentar cargos en algunos países por la muerte de un niño, mientras que en otros pueden estar protegidos por exenciones religiosas.</li>
+                            <li><strong>Poligamia:</strong> Ilegal en la mayoría de los países occidentales, pero legal y culturalmente aceptada en otros, creando conflictos legales para grupos que la practican.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+    </div>
+
+    <div id="modal" class="modal">
+        <div id="modal-content" class="modal-content relative">
+            <button id="close-modal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
+            <h2 id="modal-title" class="text-2xl font-bold mb-4"></h2>
+            <p id="modal-leader" class="mb-2"></p>
+            <h4 class="font-semibold mt-4 mb-2">Doctrina Clave:</h4>
+            <p id="modal-doctrina" class="text-sm text-gray-600 mb-4"></p>
+            <h4 class="font-semibold mt-4 mb-2">Crímenes y Controversias:</h4>
+            <ul id="modal-crimenes" class="list-disc list-inside text-sm text-gray-700"></ul>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const navItems = document.querySelectorAll('.nav-item');
+            const contentSections = document.querySelectorAll('.content-section');
+
+            const switchTab = (targetId) => {
+                navItems.forEach(item => {
+                    item.classList.remove('active');
+                    if(item.id === `nav-${targetId}`) {
+                        item.classList.add('active');
+                    }
+                });
+                contentSections.forEach(section => {
+                    section.classList.remove('active');
+                    if(section.id === `section-${targetId}`) {
+                        section.classList.add('active');
+                    }
+                });
+            };
+            
+            navItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    const targetId = item.id.replace('nav-', '');
+                    switchTab(targetId);
+                });
+            });
+
+            const creenciasButtons = document.querySelectorAll('#creencias-container button');
+            const creenciaInfo = document.getElementById('creencia-info');
+            creenciasButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    creenciaInfo.textContent = button.dataset.text;
+                    creenciaInfo.style.display = 'block';
+                });
+            });
+
+            const mecanismosData = {
+                "control-item-1": {
+                    titulo: "Aislamiento Social",
+                    texto: "Se corta o limita drásticamente el contacto de los miembros con amigos, familiares y cualquier persona fuera del grupo. Esto aumenta la dependencia del grupo para la validación social y emocional. Comparación: Monasterios o comunidades religiosas muy cerradas practican formas de aislamiento, pero generalmente sin la coerción o el engaño para retener a sus miembros."
+                },
+                "control-item-2": {
+                    titulo: "Control de la Información",
+                    texto: "Se censura el acceso a información externa (noticias, internet, libros) que pueda contradecir la doctrina del grupo. Se fomenta la desconfianza hacia los medios y la academia. Comparación: Algunas religiones fundamentalistas pueden desaconsejar ciertas fuentes de información secular, pero rara vez lo imponen con el nivel de control total que se ve en las sectas."
+                },
+                "control-item-3": {
+                    titulo: "Coerción Financiera",
+                    texto: "Se exige a los miembros que donen grandes sumas de dinero, propiedades o que trabajen gratis para el grupo, eliminando su independencia económica y haciendo muy difícil su salida. Comparación: Muchas religiones promueven el diezmo o la caridad, pero la coerción, la falta de transparencia y el enriquecimiento del líder son las líneas rojas que cruzan las sectas."
+                },
+                "control-item-4": {
+                    titulo: "Manipulación Emocional",
+                    texto: "Se utilizan técnicas como el 'bombardeo de amor' para atraer a nuevos miembros, y luego se usa el miedo (a la condenación, al mundo exterior) y la culpa (por dudar, por no ser perfecto) para mantenerlos dentro. Comparación: Si bien todas las comunidades generan lazos emocionales, la instrumentalización sistemática de estas emociones para el control es un rasgo distintivo de los grupos abusivos."
+                }
+            };
+            const mecanismoItems = document.querySelectorAll('.mecanismo-item');
+            const tituloEl = document.getElementById('mecanismo-titulo');
+            const textoEl = document.getElementById('mecanismo-texto');
+            
+            mecanismoItems.forEach(item => {
+                const showDetails = () => {
+                    const data = mecanismosData[item.id];
+                    tituloEl.textContent = data.titulo;
+                    textoEl.textContent = data.texto;
+                    mecanismoItems.forEach(i => i.classList.remove('border-[#8c7a6b]'));
+                    item.classList.add('border-[#8c7a6b]');
+                }
+                item.addEventListener('mouseenter', showDetails);
+                item.addEventListener('click', showDetails);
+            });
+
+            const casosData = [
+                { id: 'heavens-gate', title: 'Heaven\'s Gate', leader: 'Líder: Marshall Applewhite', doctrina: 'Creencia en que sus cuerpos eran meros contenedores y que un suicidio colectivo les permitiría ascender a una nave espacial que seguía al cometa Hale-Bopp.', crimenes: ['Suicidio colectivo/ritual de 39 miembros en 1997.'] },
+                { id: 'jonestown', title: 'Templo del Pueblo (Jonestown)', leader: 'Líder: Jim Jones', doctrina: 'Mezcla de socialismo utópico y cristianismo pentecostal que derivó en un culto a la personalidad paranoico y apocalíptico.', crimenes: ['Asesinato de un congresista estadounidense.', 'Suicidio/asesinato en masa de más de 900 miembros en Guyana en 1978.'] },
+                { id: 'aum-shinrikyo', title: 'Aum Shinrikyo', leader: 'Líder: Shoko Asahara', doctrina: 'Sincrética y apocalíptica, mezclando elementos del budismo, hinduismo y profecías cristianas. Creían en una guerra final entre ellos y el mundo.', crimenes: ['Ataque con gas sarín en el metro de Tokio en 1995, matando a 13 personas e hiriendo a miles.', 'Otros asesinatos y secuestros.'] },
+                { id: 'rama-katha', title: 'Rama Katha', leader: 'Líder: "Papa" Fco. Javier', doctrina: 'Se trata de un culto sincrético que fusiona elementos del cristianismo, budismo y creencias de la Nueva Era. Promueve una doctrina de sanación espiritual y desarrollo personal a través de la devoción absoluta a su líder.', crimenes: ['Investigaciones por presunto fraude fiscal y lavado de dinero.','Acusaciones de manipulación psicológica y abuso de poder.'] },
+                { id: 'solar-temple', title: 'Orden del Templo Solar', leader: 'Líderes: Joseph Di Mambro, Luc Jouret', doctrina: 'Creencias esotéricas complejas basadas en la continuación de los Caballeros Templarios. Creían que la muerte era una ilusión y que el suicidio les permitiría transitar a un nuevo plano de existencia en el planeta Sirius.', crimenes: ['Suicidios y asesinatos en masa en Suiza, Canadá y Francia entre 1994 y 1997, con un total de 74 víctimas.'] },
+                 { id: 'nxivm', title: 'NXIVM', leader: 'Líder: Keith Raniere', doctrina: 'Se presentaba como un programa de seminarios de desarrollo personal y profesional, pero ocultaba una sociedad secreta donde las mujeres eran marcadas, chantajeadas y forzadas a la esclavitud sexual.', crimenes: ['Tráfico sexual.', 'Conspiración para trabajo forzado.', 'Extorsión y fraude.'] }
+            ];
+
+            const casosGrid = document.getElementById('casos-grid');
+            casosData.forEach(caso => {
+                const card = document.createElement('div');
+                card.className = 'card p-6 cursor-pointer';
+                card.innerHTML = `<h3 class="text-xl font-semibold mb-2 text-[#3d342e]">${caso.title}</h3><p class="text-sm text-gray-600">${caso.doctrina.substring(0, 100)}...</p>`;
+                card.addEventListener('click', () => openModal(caso));
+                casosGrid.appendChild(card);
+            });
+            
+            const modal = document.getElementById('modal');
+            const modalContent = document.getElementById('modal-content');
+            const closeModalBtn = document.getElementById('close-modal');
+
+            const openModal = (caso) => {
+                document.getElementById('modal-title').textContent = caso.title;
+                document.getElementById('modal-leader').textContent = caso.leader;
+                document.getElementById('modal-doctrina').textContent = caso.doctrina;
+                const crimenesList = document.getElementById('modal-crimenes');
+                crimenesList.innerHTML = '';
+                caso.crimenes.forEach(c => {
+                    const li = document.createElement('li');
+                    li.textContent = c;
+                    crimenesList.appendChild(li);
+                });
+                modal.classList.add('visible');
+            };
+
+            const closeModal = () => {
+                modal.classList.remove('visible');
+            }
+
+            closeModalBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+
+            const ctx = document.getElementById('crimenesChart').getContext('2d');
+            const crimenesChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Fraude y Delitos Financieros', 'Abuso Sexual (incl. infantil)', 'Abuso Psicológico y Coerción', 'Homicidio (Ritual o Masivo)', 'Negligencia Médica/Infantil', 'Secuestro y Retención Ilegal'],
+                    datasets: [{
+                        label: 'Frecuencia Relativa en Casos Documentados',
+                        data: [85, 75, 95, 30, 55, 45],
+                        backgroundColor: '#8c7a6b',
+                        borderColor: '#3d342e',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Índice de Frecuencia (Estimado)' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.x !== null) {
+                                        label += context.parsed.x + '%';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
