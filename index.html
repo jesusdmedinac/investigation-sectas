@@ -20,12 +20,14 @@
     -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8f7f4; color: #1a1a1a; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8f7f4; color: #1a1a1a; scroll-behavior: smooth; }
+        html { scroll-behavior: smooth; }
         .nav-item { cursor: pointer; padding: 0.75rem 1rem; border-radius: 0.375rem; transition: background-color 0.3s, color 0.3s; font-weight: 500; }
         .nav-item.active { background-color: #8c7a6b; color: #ffffff; }
         .nav-item:not(.active):hover { background-color: #e5e0da; }
         .content-section { display: none; }
         .content-section.active { display: block; }
+        .scroll-section { scroll-margin-top: 100px; }
         .card { background-color: #ffffff; border: 1px solid #e5e0da; border-radius: 0.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); transition: transform 0.3s, box-shadow 0.3s; }
         .card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.07); }
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 50; opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s; }
@@ -33,6 +35,8 @@
         .modal-content { background-color: #fff; padding: 2rem; border-radius: 0.5rem; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
         .chart-container { position: relative; width: 100%; max-width: 700px; margin: auto; height: 350px; max-height: 400px; }
         @media (min-width: 768px) { .chart-container { height: 400px; } }
+        /* Override the content-section styles since we're using scroll layout */
+        .content-section { display: block !important; }
     </style>
 </head>
 <body class="antialiased">
@@ -44,21 +48,25 @@
             <p class="text-lg text-gray-600 max-w-3xl mx-auto">Una herramienta interactiva para explorar la instrumentalización de la fe y los mecanismos de control que conducen a la actividad delictiva.</p>
         </header>
 
-        <nav class="flex flex-wrap justify-center gap-2 md:gap-4 mb-10 pb-4 border-b border-gray-300">
-            <a id="nav-inicio" class="nav-item active">Inicio</a>
-            <a id="nav-definiciones" class="nav-item">Definiciones Clave</a>
-            <a id="nav-mecanismos" class="nav-item">Mecanismos de Control</a>
-            <a id="nav-crimenes" class="nav-item">Tipología del Crimen</a>
-            <a id="nav-casos" class="nav-item">Casos de Estudio</a>
-            <a id="nav-legal" class="nav-item">Marco Legal</a>
-        </nav>
+        <!-- Table of Contents for Scroll Navigation -->
+        <div class="fixed top-1/2 right-4 transform -translate-y-1/2 z-50 bg-white p-4 rounded-lg shadow-lg border border-gray-300">
+            <h3 class="font-semibold text-[#3d342e] mb-2">Secciones</h3>
+            <ul class="space-y-1">
+                <li><a href="#inicio" class="text-[#8c7a6b] hover:text-[#3d342e] text-sm block">Inicio</a></li>
+                <li><a href="#definiciones" class="text-[#8c7a6b] hover:text-[#3d342e] text-sm block">Definiciones</a></li>
+                <li><a href="#mecanismos" class="text-[#8c7a6b] hover:text-[#3d342e] text-sm block">Mecanismos</a></li>
+                <li><a href="#crimenes" class="text-[#8c7a6b] hover:text-[#3d342e] text-sm block">Crimenes</a></li>
+                <li><a href="#casos" class="text-[#8c7a6b] hover:text-[#3d342e] text-sm block">Casos</a></li>
+                <li><a href="#legal" class="text-[#8c7a6b] hover:text-[#3d342e] text-sm block">Marco Legal</a></li>
+            </ul>
+        </div>
 
         <main>
-            <section id="section-inicio" class="content-section active">
+            <section id="inicio" class="mb-16 scroll-section">
                 <div class="bg-white p-8 rounded-lg shadow-sm border border-gray-200">
                     <h2 class="text-2xl font-bold text-[#8c7a6b] mb-4">Bienvenido a la Plataforma de Investigación</h2>
                     <p class="text-gray-700 mb-4">Esta aplicación está diseñada para guiar tu investigación sobre la compleja intersección entre grupos de alto control (comúnmente llamados "sectas") y la comisión de crímenes. El objetivo no es generalizar sobre la fe, sino analizar específicamente cómo ciertas estructuras y doctrinas pueden ser manipuladas para justificar o cometer actos ilegales.</p>
-                    <p class="text-gray-700 mb-6">Utiliza las pestañas de navegación para explorar los diferentes aspectos de este fenómeno. Desde las definiciones fundamentales hasta el análisis de casos concretos y la respuesta de los sistemas judiciales, cada sección te proporcionará información estructurada para responder a las preguntas clave de tu investigación:</p>
+                    <p class="text-gray-700 mb-6">Explora esta página para descubrir los diferentes aspectos de este fenómeno. Desde las definiciones fundamentales hasta el análisis de casos concretos y la respuesta de los sistemas judiciales, cada sección te proporcionará información estructurada para responder a las preguntas clave de tu investigación:</p>
                     <ul class="list-disc list-inside space-y-2 text-gray-700">
                         <li>¿Cómo se define una "secta" en un contexto criminológico?</li>
                         <li>¿Qué mecanismos psicológicos permiten la instrumentalización de los miembros?</li>
@@ -69,7 +77,7 @@
                 </div>
             </section>
 
-            <section id="section-definiciones" class="content-section">
+            <section id="definiciones" class="mb-16 scroll-section">
                 <div class="text-center mb-8">
                      <h2 class="text-3xl font-bold text-[#8c7a6b] mb-2">Definiendo el Fenómeno</h2>
                      <p class="text-gray-600 max-w-2xl mx-auto">Para analizar el problema, es crucial entender la terminología. Aquí exploramos los conceptos de "secta" o "culto" y cómo ciertas creencias pueden actuar como catalizadores de la violencia.</p>
@@ -98,7 +106,7 @@
                 </div>
             </section>
 
-            <section id="section-mecanismos" class="content-section">
+            <section id="mecanismos" class="mb-16 scroll-section">
                  <div class="text-center mb-8">
                      <h2 class="text-3xl font-bold text-[#8c7a6b] mb-2">Mecanismos de Control Psicológico</h2>
                      <p class="text-gray-600 max-w-3xl mx-auto">Los crímenes en estos grupos no surgen de la nada. Son el resultado de un proceso sistemático de control y coerción. Interactúa con el siguiente diagrama para entender cómo se manipula a los individuos y se neutraliza su pensamiento crítico.</p>
@@ -129,7 +137,7 @@
                 </div>
             </section>
 
-            <section id="section-crimenes" class="content-section">
+            <section id="crimenes" class="mb-16 scroll-section">
                 <div class="text-center mb-8">
                      <h2 class="text-3xl font-bold text-[#8c7a6b] mb-2">Tipología de Crímenes Frecuentes</h2>
                      <p class="text-gray-600 max-w-3xl mx-auto">Aunque los crímenes pueden variar, ciertos patrones emergen de forma consistente en los casos estudiados. El siguiente gráfico muestra una distribución de los tipos de delitos más comunes asociados a grupos sectarios, basados en análisis de casos documentados.</p>
@@ -141,7 +149,7 @@
                 </div>
             </section>
 
-            <section id="section-casos" class="content-section">
+            <section id="casos" class="mb-16 scroll-section">
                  <div class="text-center mb-8">
                      <h2 class="text-3xl font-bold text-[#8c7a6b] mb-2">Casos de Estudio Notables</h2>
                      <p class="text-gray-600 max-w-3xl mx-auto">La teoría cobra vida al examinar casos reales. Explora estos ejemplos históricos y contemporáneos para ver cómo los mecanismos de control y las doctrinas extremas se tradujeron en crímenes devastadores. Haz clic en cada caso para más detalles.</p>
@@ -150,7 +158,7 @@
                 </div>
             </section>
             
-            <section id="section-legal" class="content-section">
+            <section id="legal" class="scroll-section">
                  <div class="text-center mb-8">
                      <h2 class="text-3xl font-bold text-[#8c7a6b] mb-2">Respuesta y Desafíos del Marco Legal</h2>
                      <p class="text-gray-600 max-w-3xl mx-auto">Procesar crímenes cometidos en un contexto religioso presenta desafíos únicos para la justicia. Esta sección aborda las dificultades legales, la existencia de leyes específicas y la variabilidad de la definición de "crimen" a nivel internacional.</p>
@@ -197,31 +205,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const navItems = document.querySelectorAll('.nav-item');
-            const contentSections = document.querySelectorAll('.content-section');
-
-            const switchTab = (targetId) => {
-                navItems.forEach(item => {
-                    item.classList.remove('active');
-                    if(item.id === `nav-${targetId}`) {
-                        item.classList.add('active');
-                    }
-                });
-                contentSections.forEach(section => {
-                    section.classList.remove('active');
-                    if(section.id === `section-${targetId}`) {
-                        section.classList.add('active');
-                    }
-                });
-            };
-            
-            navItems.forEach(item => {
-                item.addEventListener('click', () => {
-                    const targetId = item.id.replace('nav-', '');
-                    switchTab(targetId);
-                });
-            });
-
+            // Keep the interactive elements but remove tab switching functionality
             const creenciasButtons = document.querySelectorAll('#creencias-container button');
             const creenciaInfo = document.getElementById('creencia-info');
             creenciasButtons.forEach(button => {
